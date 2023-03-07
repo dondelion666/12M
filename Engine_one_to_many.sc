@@ -1,60 +1,43 @@
-// CroneEngine_12M
-Engine_12M : CroneEngine {
+// CroneEngine_one_to_many
+Engine_one_to_many : CroneEngine {
 
-    //////// 1 ////////
-    // we will initialize variables here
-    // the only variable we need is one
-    // to store the synth we create
-    var buffer;
+    var b;
     var synth;
 
-    // don't change this
     *new { arg context, doneCallback;
         ^super.new(context, doneCallback);
     }
 
-    // alloc is where we will define things
     alloc {
-
-        //////// 2 ////////
-        // define here!
-        SynthDef("bufplayer", {
-        arg out;
-        
-        out=Playbuf.ar(
-        numChannels:2,
-        bufnum: buffer,
-        );
-        
-	      Out.ar(0,out);
-	      }).add;
-
-       context.server.sync;
-
-
-        //////// 3 ////////
-		// create the the sound "synth"s
-        synth=Synth("bufplayer",target:context.server);
-        
-
-        //////// 4 ////////
-        // define commands for the lua
-
-        // a load function to load samples
-        this.addCommand("load","s", { arg msg;
-        
-            Buffer.read(context.server,msg[1]);
-            });
-        
-
-        
+    
+    b=Buffer.new(context.server);
+    
+    SynthDef("bufplayer", {
+    
+      var snd;
+  	  snd=PlayBuf.ar(
+    		numChannels:2,
+  	  	bufnum:b,
+  	  	loop:0;
+  	  );
+  	    Out.ar(0,snd); 
+      }).add;
+    
+    context.server.sync;
+    
+    synth=Synth("bufplayer",target:context.server);
+    
+    this.addCommand("file", "s", { arg msg;
+         
+         b.free;
+         
+         b=Buffer.read(context.server,msg[1]);
+         
+         });
+    
     }
 
-
     free {
-        //////// 5 ////////
-        // free any variable we create
-        // otherwise it won't ever stop!
         synth.free;
     }
 }
