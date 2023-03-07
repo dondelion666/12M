@@ -13,9 +13,10 @@ Engine_one_to_many : CroneEngine {
     b=Buffer.new(context.server);
     
     SynthDef("bufplayer", {
-    
+      arg t_trig=0;
       var snd;
   	  snd=PlayBuf.ar(
+  	    trigger: t_trig,
     		numChannels:2,
   	  	bufnum:b,
   	  	loop:0;
@@ -28,12 +29,14 @@ Engine_one_to_many : CroneEngine {
     synth=Synth("bufplayer",target:context.server);
     
     this.addCommand("file", "s", { arg msg;
-         
          b.free;
-         
          b=Buffer.read(context.server,msg[1]);
-         
+         synth.set(\t_trig,1);
          });
+         
+    this.addCommand("play", "i", { arg msg;
+        synth.set(\t_trig,1);
+        });
     
     }
 
