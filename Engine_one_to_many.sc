@@ -58,7 +58,7 @@ Engine_one_to_many : CroneEngine {
          });
          
     this.addCommand("play", "ii", { arg msg;
-        synths[msg[1]-1].set(\trig,1);
+        synths[msg[1]-1].set(\trig,[2]);
         });
     
     }
