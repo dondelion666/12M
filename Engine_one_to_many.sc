@@ -13,15 +13,36 @@ Engine_one_to_many : CroneEngine {
     b=Buffer.new(context.server);
     
     SynthDef("bufplayer", {
-      arg t_trig=0;
-      var snd;
-  	  snd=PlayBuf.ar(
-  	    trigger: t_trig,
-    		numChannels:2,
-  	  	bufnum:b,
-  	  	loop:0;
-  	  );
-  	    Out.ar(0,snd); 
+      arg out=0, rate=1, start=0, end=1, trig=0;
+      var env, snd, pos, frames;
+      
+      // rate is modified by BufRateScale to convert between sampling rates
+	    rate = rate*BufRateScale.kr(b);
+	    // frames is the number of frames
+	    frames = BufFrames.kr(b);
+	    
+	    // Phasor is a ramp
+	    pos=Phasor.ar(
+	      trig:trig,
+		    rate:rate,
+		    start:start*frames,
+		    end:end*frames,
+		    resetPos:start*frames,
+	    );
+	    
+	    env=EnvGen.ar(Env.asr(0.01,1,0.01,0),gate:trig);
+      
+  	  snd=BufRd.ar(
+		    numChannels:2,
+		    bufnum:b,
+		    phase:pos,
+		    loop:0,
+		    interpolation:4,
+	    );
+	    
+	    snd=snd*env;
+	    
+  	  Out.ar(out,snd); 
       }).add;
     
     context.server.sync;
@@ -37,7 +58,7 @@ Engine_one_to_many : CroneEngine {
          });
          
     this.addCommand("play", "ii", { arg msg;
-        synths[msg[1]-1].set(\t_trig,1);
+        synths[msg[1]-1].set(\trig,1);
         });
     
     }
